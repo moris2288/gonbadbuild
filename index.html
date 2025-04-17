@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه رصد آنلاین ساخت‌وسازهای گنبد کاووس</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary-color: #c81934;
+            --primary-rgb: 200, 25, 52;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --white: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--text-color);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: var(--white);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo-section {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .logo-section h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .logo-section p {
+            font-size: 14px;
+            color: #666;
+            font-weight: 300;
+        }
+        
+        .contact-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .contact-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .contact-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+        
+        .contact-btn:hover {
+            background-color: rgba(var(--primary-rgb), 0.9);
+        }
+        
+        .telegram-channel {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .telegram-channel a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        /* Ad Banner */
+        .ad-banner {
+            width: 100%;
+            height: 90px;
+            background-color: #ddd;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px dashed #999;
+        }
+        
+        .ad-banner img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* Map Section */
+        .map-section {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+        
+        /* Project Markers */
+        .project-marker {
+            background-color: var(--primary-color);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+        }
+        
+        .project-marker.blue {
+            background-color: #3498db;
+        }
+        
+        /* Project Info Window */
+        .project-info {
+            padding: 10px;
+            min-width: 200px;
+        }
+        
+        .project-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .project-info p {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .project-images {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .project-images img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        
+        /* Admin Login Button */
+        .admin-login {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-content h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #ccc;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* Admin Panel */
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 1002;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .admin-header h2 {
+            color: var(--primary-color);
+        }
+        
+        .admin-sections {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-section-btn {
+            padding: 10px 15px;
+            background-color: #eee;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .admin-section-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .projects-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .project-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .project-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .project-card p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .project-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .image-preview {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .image-upload-container {
+            margin-top: 15px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .contact-section {
+                align-items: flex-start;
+                margin-top: 15px;
+            }
+            
+            .contact-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .contact-btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .map-section {
+                height: 400px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+                padding: 20px 15px;
+            }
+            
+            .projects-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1>سامانه رصد آنلاین ساخت‌وسازهای گنبد کاووس</h1>
+                    <p>این سامانه به شما کمک می‌کند تا از روند ساخت‌وسازهای شهر خود آگاه باشید</p>
+                </div>
+                <div class="contact-section">
+                    <div class="contact-buttons">
+                        <a href="tel:+989111791024" class="contact-btn">+989111791024</a>
+                        <a href="tel:+989116691558" class="contact-btn">+989116691558</a>
+                    </div>
+                    <div class="telegram-channel">
+                        کانال تلگرام:
+                        <a href="https://t.me/amlakkhanahmadi" target="_blank">@amlakkhanahmadi</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="ad-banner" id="adBanner">
+            <img id="adImage" src="" alt="تبلیغات پروژه های ساخت و ساز" style="display: none;">
+            <p id="adPlaceholder">فضای تبلیغات پروژه های ساخت و ساز</p>
+        </div>
+        
+        <div class="map-section" id="map"></div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>کلیه حقوق این سامانه متعلق به مشاور املاک خان احمدی در گنبد کاووس می‌باشد © ۱۴۰۴</p>
+        </div>
+    </footer>
+    
+    <div class="admin-login" id="adminLoginBtn">
+        <i class="fas fa-lock"></i>
+    </div>
+    
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>ورود به پنل مدیریت</h2>
+            <p style="color: #666; margin-bottom: 20px; text-align: center; font-size: 14px;">پنل کاربری از طریق مرورگر ویندوز استفاده شود</p>
+            <div class="form-group">
+                <label for="username">نام کاربری:</label>
+                <input type="text" id="username" placeholder="نام کاربری را وارد کنید">
+            </div>
+            <div class="form-group">
+                <label for="password">رمز عبور:</label>
+                <input type="password" id="password" placeholder="رمز عبور را وارد کنید">
+            </div>
+            <div class="error-message" id="loginErrorMessage">نام کاربری یا رمز عبور اشتباه است</div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" id="cancelLoginBtn">انصراف</button>
+                <button class="btn btn-primary" id="confirmLoginBtn">ورود</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="container">
+            <div class="admin-header">
+                <h2>پنل مدیریت سامانه</h2>
+                <button class="btn btn-secondary" id="logoutBtn">خروج از پنل</button>
+            </div>
+            
+            <div class="admin-sections">
+                <button class="admin-section-btn active" data-section="projects">پروژه ها</button>
+                <button class="admin-section-btn" data-section="new-project">پروژه جدید</button>
+                <button class="admin-section-btn" data-section="ads">تبلیغات</button>
+            </div>
+            
+            <!-- Projects List Section -->
+            <div class="admin-section-content" id="projectsSection">
+                <h3>لیست پروژه های ثبت شده</h3>
+                <div class="projects-list" id="projectsList">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- New Project Section -->
+            <div class="admin-section-content" id="newProjectSection" style="display: none;">
+                <h3>ثبت پروژه جدید</h3>
+                <form id="newProjectForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectName">نام پروژه</label>
+                            <input type="text" id="projectName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectBuilder">نام سازنده</label>
+                            <input type="text" id="projectBuilder" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectNumber">چندمین پروژه این سازنده</label>
+                            <input type="number" id="projectNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectStartDate">تاریخ عملیات خاکبرداری</label>
+                            <input type="text" id="projectStartDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectStatus">در آخرین بروزرسانی چه پروژه در حال اجرای کدام بخش است؟</label>
+                        <input type="text" id="projectStatus" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectAddress">آدرس پروژه</label>
+                        <input type="text" id="projectAddress" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectLat">عرض جغرافیایی (Latitude)</label>
+                            <input type="text" id="projectLat" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectLng">طول جغرافیایی (Longitude)</label>
+                            <input type="text" id="projectLng" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>رنگ نقطه روی نقشه</label>
+                        <div>
+                            <input type="radio" id="markerRed" name="markerColor" value="red" checked>
+                            <label for="markerRed">قرمز (پیش فرض)</label>
+                            <input type="radio" id="markerBlue" name="markerColor" value="blue">
+                            <label for="markerBlue">آبی</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>تصاویر رندر پروژه (اختیاری)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="renderImages" accept="image/*" multiple>
+                            <div class="image-preview-container" id="renderPreview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>تصاویر نقشه یا پلان پروژه (اجباری)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="planImages" accept="image/*" multiple required>
+                            <div class="image-preview-container" id="planPreview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>تصاویر در حال ساخت (حداقل 3 تصویر)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="constructionImages" accept="image/*" multiple required>
+                            <div class="image-preview-container" id="constructionPreview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelProjectBtn">انصراف</button>
+                        <button type="submit" class="btn btn-primary">ثبت پروژه</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Edit Project Section (hidden by default) -->
+            <div class="admin-section-content" id="editProjectSection" style="display: none;">
+                <h3>ویرایش پروژه</h3>
+                <form id="editProjectForm">
+                    <input type="hidden" id="editProjectId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProjectName">نام پروژه</label>
+                            <input type="text" id="editProjectName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProjectBuilder">نام سازنده</label>
+                            <input type="text" id="editProjectBuilder" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProjectNumber">چندمین پروژه این سازنده</label>
+                            <input type="number" id="editProjectNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProjectStartDate">تاریخ عملیات خاکبرداری</label>
+                            <input type="text" id="editProjectStartDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editProjectStatus">در آخرین بروزرسانی چه پروژه در حال اجرای کدام بخش است؟</label>
+                        <input type="text" id="editProjectStatus" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editProjectAddress">آدرس پروژه</label>
+                        <input type="text" id="editProjectAddress" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProjectLat">عرض جغرافیایی (Latitude)</label>
+                            <input type="text" id="editProjectLat" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProjectLng">طول جغرافیایی (Longitude)</label>
+                            <input type="text" id="editProjectLng" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>رنگ نقطه روی نقشه</label>
+                        <div>
+                            <input type="radio" id="editMarkerRed" name="editMarkerColor" value="red" checked>
+                            <label for="editMarkerRed">قرمز (پیش فرض)</label>
+                            <input type="radio" id="editMarkerBlue" name="editMarkerColor" value="blue">
+                            <label for="editMarkerBlue">آبی</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>تصاویر رندر پروژه (اختیاری)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="editRenderImages" accept="image/*" multiple>
+                            <div class="image-preview-container" id="editRenderPreview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>تصاویر نقشه یا پلان پروژه (اجباری)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="editPlanImages" accept="image/*" multiple>
+                            <div class="image-preview-container" id="editPlanPreview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>تصاویر در حال ساخت (حداقل 3 تصویر)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="editConstructionImages" accept="image/*" multiple>
+                            <div class="image-preview-container" id="editConstructionPreview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelEditBtn">انصراف</button>
+                        <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Ads Section -->
+            <div class="admin-section-content" id="adsSection" style="display: none;">
+                <h3>مدیریت تبلیغات</h3>
+                <div class="form-group">
+                    <label>تصویر تبلیغاتی (728x90 پیکسل)</label>
+                    <div class="image-upload-container">
+                        <input type="file" id="adImageUpload" accept="image/*">
+                        <div class="image-preview-container">
+                            <img id="adPreview" class="image-preview" src="" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="saveAdBtn">ذخیره تبلیغات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Sample data storage (in a real app, this would be replaced with a backend)
+        let projectsData = [
+            {
+                id: 1,
+                name: "پروژه مسکونی نگین",
+                builder: "شرکت عمران گنبد",
+                projectNumber: 3,
+                address: "گنبد کاووس، بلوار امام، کوچه 15",
+                coordinates: [37.255, 55.171],
+                color: "red",
+                startDate: "1402/05/15",
+                lastUpdate: getCurrentPersianDate(),
+                status: "در حال اجرای فونداسیون",
+                images: {
+                    render: ["https://via.placeholder.com/150?text=رندر+پروژه"],
+                    plan: ["https://via.placeholder.com/150?text=پلان"],
+                    construction: [
+                        "https://via.placeholder.com/150?text=ساخت+1",
+                        "https://via.placeholder.com/150?text=ساخت+2",
+                        "https://via.placeholder.com/150?text=ساخت+3"
+                    ]
+                }
+            },
+            {
+                id: 2,
+                name: "مجتمع تجاری الماس",
+                builder: "گروه ساختمانی کاووس",
+                projectNumber: 7,
+                address: "گنبد کاووس، خیابان طالقانی",
+                coordinates: [37.252, 55.175],
+                color: "blue",
+                startDate: "1402/11/01",
+                lastUpdate: getCurrentPersianDate(),
+                status: "در حال اجرای اسکلت فلزی",
+                images: {
+                    render: ["https://via.placeholder.com/150?text=رندر+پروژه"],
+                    plan: ["https://via.placeholder.com/150?text=پلان"],
+                    construction: [
+                        "https://via.placeholder.com/150?text=ساخت+1",
+                        "https://via.placeholder.com/150?text=ساخت+2",
+                        "https://via.placeholder.com/150?text=ساخت+3"
+                    ]
+                }
+            }
+        ];
+        
+        let adImage = "";
+        let map;
+        let markers = [];
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            initEventListeners();
+            renderProjectsList();
+        });
+        
+        // Initialize the map
+        function initMap() {
+            // Initialize the map centered on Gonbad Kavous
+            map = L.map('map').setView([37.25, 55.17], 13);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Add markers for each project
+            updateMapMarkers();
+        }
+        
+        // Update markers on the map
+        function updateMapMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // Add new markers
+            projectsData.forEach(project => {
+                const marker = L.marker(project.coordinates, {
+                    icon: L.divIcon({
+                        className: `project-marker ${project.color}`,
+                        iconSize: [24, 24]
+                    })
+                }).addTo(map);
+                
+                // Create popup content
+                const popupContent = createProjectPopupContent(project);
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+        }
+        
+        // Create popup content for a project
+        function createProjectPopupContent(project) {
+            let imagesHTML = '';
+            
+            // Combine all images
+            const allImages = [
+                ...(project.images.render || []),
+                ...(project.images.plan || []),
+                ...(project.images.construction || [])
+            ];
+            
+            // Create image elements
+            if (allImages.length > 0) {
+                imagesHTML = '<div class="project-images">';
+                allImages.forEach(img => {
+                    imagesHTML += `<img src="${img}" alt="تصویر پروژه" onclick="openImageInLightbox('${img}')">`;
+                });
+                imagesHTML += '</div>';
+            }
+            
+            return `
+                <div class="project-info">
+                    <h3>${project.name}</h3>
+                    <p><strong>سازنده:</strong> ${project.builder}</p>
+                    <p><strong>آدرس:</strong> ${project.address}</p>
+                    <p><strong>تاریخ شروع:</strong> ${project.startDate}</p>
+                    <p><strong>آخرین بروزرسانی:</strong> ${project.lastUpdate}</p>
+                    <p><strong>وضعیت:</strong> ${project.status}</p>
+                    ${imagesHTML}
+                </div>
+            `;
+        }
+        
+        // Open image in lightbox (simplified for this example)
+        function openImageInLightbox(src) {
+            window.open(src, '_blank');
+        }
+        
+        // Get current Persian date (simplified)
+        function getCurrentPersianDate() {
+            const now = new Date();
+            const year = now.getFullYear() - 621;
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            return `${year}/${month < 10 ? '0' + month : month}/${day < 10 ? '0' + day : day}`;
+        }
+        
+        // Initialize event listeners
+        function initEventListeners() {
+            // Admin login button
+            document.getElementById('adminLoginBtn').addEventListener('click', function() {
+                document.getElementById('loginModal').style.display = 'flex';
+            });
+            
+            // Cancel login button
+            document.getElementById('cancelLoginBtn').addEventListener('click', function() {
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('loginErrorMessage').style.display = 'none';
+            });
+            
+            // Confirm login button
+            document.getElementById('confirmLoginBtn').addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (username === 'amlakkhanahmadi' && password === 'Morteza1791024') {
+                    // Successful login
+                    document.getElementById('loginModal').style.display = 'none';
+                    document.getElementById('loginErrorMessage').style.display = 'none';
+                    document.getElementById('adminPanel').style.display = 'block';
+                    
+                    // Reset form
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    document.getElementById('loginErrorMessage').style.display = 'block';
+                }
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                document.getElementById('adminPanel').style.display = 'none';
+            });
+            
+            // Admin section buttons
+            document.querySelectorAll('.admin-section-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Set active button
+                    document.querySelectorAll('.admin-section-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const section = this.getAttribute('data-section');
+                    document.querySelectorAll('.admin-section-content').forEach(sec => {
+                        sec.style.display = 'none';
+                    });
+                    
+                    if (section === 'projects') {
+                        document.getElementById('projectsSection').style.display = 'block';
+                        renderProjectsList();
+                    } else if (section === 'new-project') {
+                        document.getElementById('newProjectSection').style.display = 'block';
+                        resetNewProjectForm();
+                    } else if (section === 'ads') {
+                        document.getElementById('adsSection').style.display = 'block';
+                        document.getElementById('adPreview').src = adImage || '';
+                        document.getElementById('adPreview').style.display = adImage ? 'block' : 'none';
+                    }
+                });
+            });
+            
+            // Image preview handlers
+            document.getElementById('renderImages').addEventListener('change', function(e) {
+                handleImagePreview(e, 'renderPreview');
+            });
+            
+            document.getElementById('planImages').addEventListener('change', function(e) {
+                handleImagePreview(e, 'planPreview');
+            });
+            
+            document.getElementById('constructionImages').addEventListener('change', function(e) {
+                handleImagePreview(e, 'constructionPreview');
+            });
+            
+            // Edit image preview handlers
+            document.getElementById('editRenderImages').addEventListener('change', function(e) {
+                handleImagePreview(e, 'editRenderPreview');
+            });
+            
+            document.getElementById('editPlanImages').addEventListener('change', function(e) {
+                handleImagePreview(e, 'editPlanPreview');
+            });
+            
+            document.getElementById('editConstructionImages').addEventListener('change', function(e) {
+                handleImagePreview(e, 'editConstructionPreview');
+            });
+            
+            // Ad image upload
+            document.getElementById('adImageUpload').addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        adImage = event.target.result;
+                        document.getElementById('adPreview').src = adImage;
+                        document.getElementById('adPreview').style.display = 'block';
+                        
+                        // Update main page ad banner
+                        document.getElementById('adImage').src = adImage;
+                        document.getElementById('adImage').style.display = 'block';
+                        document.getElementById('adPlaceholder').style.display = 'none';
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            
+            // Save ad button
+            document.getElementById('saveAdBtn').addEventListener('click', function() {
+                alert('تبلیغات با موفقیت ذخیره شد.');
+            });
+            
+            // New project form submission
+            document.getElementById('newProjectForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveNewProject();
+            });
+            
+            // Cancel new project button
+            document.getElementById('cancelProjectBtn').addEventListener('click', function() {
+                resetNewProjectForm();
+                document.querySelector('.admin-section-btn[data-section="projects"]').click();
+            });
+            
+            // Edit project form submission
+            document.getElementById('editProjectForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveEditedProject();
+            });
+            
+            // Cancel edit button
+            document.getElementById('cancelEditBtn').addEventListener('click', function() {
+                document.querySelector('.admin-section-btn[data-section="projects"]').click();
+            });
+        }
+        
+        // Handle image preview for uploads
+        function handleImagePreview(event, previewContainerId) {
+            const files = event.target.files;
+            const previewContainer = document.getElementById(previewContainerId);
+            previewContainer.innerHTML = '';
+            
+            if (files) {
+                for (let i = 0; i < files.length; i++) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'image-preview';
+                        previewContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(files[i]);
+                }
+            }
+        }
+        
+        // Render projects list in admin panel
+        function renderProjectsList() {
+            const projectsList = document.getElementById('projectsList');
+            projectsList.innerHTML = '';
+            
+            if (projectsData.length === 0) {
+                projectsList.innerHTML = '<p>هیچ پروژه ای ثبت نشده است.</p>';
+                return;
+            }
+            
+            projectsData.forEach(project => {
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                
+                // Get first image for thumbnail
+                const firstImage = project.images.construction?.[0] || 
+                                   project.images.plan?.[0] || 
+                                   project.images.render?.[0] || 
+                                   'https://via.placeholder.com/150?text=بدون+تصویر';
+                
+                projectCard.innerHTML = `
+                    <h3>${project.name}</h3>
+                    <p><strong>سازنده:</strong> ${project.builder}</p>
+                    <p><strong>آدرس:</strong> ${project.address.substring(0, 30)}...</p>
+                    <p><strong>آخرین بروزرسانی:</strong> ${project.lastUpdate}</p>
+                    <img src="${firstImage}" class="image-preview" style="margin-top:10px;">
+                    <div class="project-actions">
+                        <button class="btn btn-primary" onclick="editProject(${project.id})">ویرایش</button>
+                        <button class="btn btn-danger" onclick="deleteProject(${project.id})">حذف</button>
+                    </div>
+                `;
+                
+                projectsList.appendChild(projectCard);
+            });
+        }
+        
+        // Reset new project form
+        function resetNewProjectForm() {
+            document.getElementById('newProjectForm').reset();
+            document.getElementById('renderPreview').innerHTML = '';
+            document.getElementById('planPreview').innerHTML = '';
+            document.getElementById('constructionPreview').innerHTML = '';
+        }
+        
+        // Save new project
+        function saveNewProject() {
+            // In a real app, this would upload images to a server
+            // For this demo, we'll just use placeholder URLs
+            
+            const newProject = {
+                id: projectsData.length > 0 ? Math.max(...projectsData.map(p => p.id)) + 1 : 1,
+                name: document.getElementById('projectName').value,
+                builder: document.getElementById('projectBuilder').value,
+                projectNumber: document.getElementById('projectNumber').value,
+                address: document.getElementById('projectAddress').value,
+                coordinates: [
+                    parseFloat(document.getElementById('projectLat').value),
+                    parseFloat(document.getElementById('projectLng').value)
+                ],
+                color: document.querySelector('input[name="markerColor"]:checked').value,
+                startDate: document.getElementById('projectStartDate').value,
+                lastUpdate: getCurrentPersianDate(),
+                status: document.getElementById('projectStatus').value,
+                images: {
+                    render: Array.from(document.getElementById('renderImages').files).map((_, i) => 
+                        `https://via.placeholder.com/150?text=رندر+${document.getElementById('projectName').value}`),
+                    plan: Array.from(document.getElementById('planImages').files).map((_, i) => 
+                        `https://via.placeholder.com/150?text=پلان+${document.getElementById('projectName').value}`),
+                    construction: Array.from(document.getElementById('constructionImages').files).map((_, i) => 
+                        `https://via.placeholder.com/150?text=ساخت+${i+1}+${document.getElementById('projectName').value}`)
+                }
+            };
+            
+            projectsData.push(newProject);
+            updateMapMarkers();
+            renderProjectsList();
+            resetNewProjectForm();
+            
+            alert('پروژه جدید با موفقیت ثبت شد.');
+            document.querySelector('.admin-section-btn[data-section="projects"]').click();
+        }
+        
+        // Edit project
+        window.editProject = function(projectId) {
+            const project = projectsData.find(p => p.id === projectId);
+            if (!project) return;
+            
+            // Populate edit form with project data
+            document.getElementById('editProjectId').value = project.id;
+            document.getElementById('editProjectName').value = project.name;
+            document.getElementById('editProjectBuilder').value = project.builder;
+            document.getElementById('editProjectNumber').value = project.projectNumber;
+            document.getElementById('editProjectStartDate').value = project.startDate;
+            document.getElementById('editProjectStatus').value = project.status;
+            document.getElementById('editProjectAddress').value = project.address;
+            document.getElementById('editProjectLat').value = project.coordinates[0];
+            document.getElementById('editProjectLng').value = project.coordinates[1];
+            
+            // Set marker color
+            if (project.color === 'blue') {
+                document.getElementById('editMarkerBlue').checked = true;
+            } else {
+                document.getElementById('editMarkerRed').checked = true;
+            }
+            
+            // Show existing images
+            const editRenderPreview = document.getElementById('editRenderPreview');
+            const editPlanPreview = document.getElementById('editPlanPreview');
+            const editConstructionPreview = document.getElementById('editConstructionPreview');
+            
+            editRenderPreview.innerHTML = '';
+            editPlanPreview.innerHTML = '';
+            editConstructionPreview.innerHTML = '';
+            
+            project.images.render?.forEach(img => {
+                const imgElement = document.createElement('img');
+                imgElement.src = img;
+                imgElement.className = 'image-preview';
+                editRenderPreview.appendChild(imgElement);
+            });
+            
+            project.images.plan?.forEach(img => {
+                const imgElement = document.createElement('img');
+                imgElement.src = img;
+                imgElement.className = 'image-preview';
+                editPlanPreview.appendChild(imgElement);
+            });
+            
+            project.images.construction?.forEach(img => {
+                const imgElement = document.createElement('img');
+                imgElement.src = img;
+                imgElement.className = 'image-preview';
+                editConstructionPreview.appendChild(imgElement);
+            });
+            
+            // Show edit section
+            document.querySelectorAll('.admin-section-content').forEach(sec => {
+                sec.style.display = 'none';
+            });
+            document.getElementById('editProjectSection').style.display = 'block';
+            
+            // Update active button
+            document.querySelectorAll('.admin-section-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.admin-section-btn[data-section="projects"]').classList.add('active');
+        };
+        
+        // Save edited project
+        function saveEditedProject() {
+            const projectId = parseInt(document.getElementById('editProjectId').value);
+            const projectIndex = projectsData.findIndex(p => p.id === projectId);
+            
+            if (projectIndex === -1) return;
+            
+            // Update project data
+            projectsData[projectIndex] = {
+                ...projectsData[projectIndex],
+                name: document.getElementById('editProjectName').value,
+                builder: document.getElementById('editProjectBuilder').value,
+                projectNumber: document.getElementById('editProjectNumber').value,
+                startDate: document.getElementById('editProjectStartDate').value,
+                status: document.getElementById('editProjectStatus').value,
+                address: document.getElementById('editProjectAddress').value,
+                coordinates: [
+                    parseFloat(document.getElementById('editProjectLat').value),
+                    parseFloat(document.getElementById('editProjectLng').value)
+                ],
+                color: document.querySelector('input[name="editMarkerColor"]:checked').value,
+                lastUpdate: getCurrentPersianDate(),
+                // Note: In a real app, you would handle image updates here
+            };
+            
+            updateMapMarkers();
+            renderProjectsList();
+            
+            alert('تغییرات پروژه با موفقیت ذخیره شد.');
+            document.querySelector('.admin-section-btn[data-section="projects"]').click();
+        }
+        
+        // Delete project
+        window.deleteProject = function(projectId) {
+            if (confirm('آیا از حذف این پروژه مطمئن هستید؟')) {
+                projectsData = projectsData.filter(p => p.id !== projectId);
+                updateMapMarkers();
+                renderProjectsList();
+                alert('پروژه با موفقیت حذف شد.');
+            }
+        };
+    </script>
+</body>
+</html>
